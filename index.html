@@ -37,6 +37,14 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
     <div class="muted small" id="stamp">Loading…</div>
   </div>
 
+  <!-- New drops banner (shown only if ?ids=... or multiple ids present) -->
+  <div id="newBanner" class="panel" style="display:none; margin-bottom:12px">
+    <div class="row" style="align-items:center">
+      <div><strong id="newCount">New drops</strong></div>
+      <div id="newChips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    </div>
+  </div>
+
   <div class="panel controls">
     <input id="q" type="search" placeholder="Search title / notes / price…" />
     <select id="roaster"><option value="">All roasters</option></select>
@@ -66,14 +74,16 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
       <div>Last: <span id="m_last"></span></div>
     </div>
     <div class="actions">
+      <button id="m_prev" class="btn">◀ Prev</button>
       <a id="m_link" class="btn primary" target="_blank" rel="noopener">Visit product</a>
+      <button id="m_next" class="btn">Next ▶</button>
       <button id="m_close" class="btn">Close</button>
     </div>
   </div>
 </div>
 
 <script type="module">
-  // ---- FIREBASE_CONFIG: paste your config here ----
+  // ---- FIREBASE_CONFIG: paste your real config here ----
   const firebaseConfig = {
     apiKey: "AIzaSyB7ovDN0lvwYZ872cFCxF_yI8BAFbm6xpw",
     authDomain: "coffee-drop-monitor.firebaseapp.com",
@@ -88,7 +98,7 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
   import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const db  = getFirestore(app);
 
   const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -98,6 +108,10 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
   const stEl = document.getElementById('stock');
   const grid = document.getElementById('grid');
   const stamp = document.getElementById('stamp');
+
+  const newBanner = document.getElementById('newBanner');
+  const newCount  = document.getElementById('newCount');
+  const newChips  = document.getElementById('newChips');
 
   const backdrop = document.getElementById('backdrop');
   const mTitle = document.getElementById('m_title');
@@ -111,9 +125,15 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
   const mLast = document.getElementById('m_last');
   const mLink = document.getElementById('m_link');
   const mClose = document.getElementById('m_close');
+  const mPrev = document.getElementById('m_prev');
+  const mNext = document.getElementById('m_next');
 
   let ITEMS = [];
   let CARDS = [];
+  let NEW_IDS = [];            // ids provided via ?ids=...
+  let CURRENT_NEW_INDEX = -1;  // pointer within NEW_IDS
+
+  function byId(id){ return ITEMS.find(x=>x.id===id); }
 
   function openModal(item){
     if(!item) return;
@@ -128,11 +148,50 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
     mLast.textContent = item.last_seen || '';
     mLink.href = item.url;
     backdrop.style.display='flex';
-    history.replaceState(null,'',`?id=${item.id}`);
+    history.replaceState(null,'',`?id=${item.id}` + (NEW_IDS.length ? `&ids=${NEW_IDS.join(',')}` : ''));
+    updatePrevNext(item.id);
   }
+
   function closeModal(){ backdrop.style.display='none'; }
+
+  function updatePrevNext(currentId){
+    if (!NEW_IDS.length){
+      mPrev.style.display = 'none';
+      mNext.style.display = 'none';
+      return;
+    }
+    mPrev.style.display = '';
+    mNext.style.display = '';
+    CURRENT_NEW_INDEX = NEW_IDS.indexOf(currentId);
+    mPrev.disabled = CURRENT_NEW_INDEX <= 0;
+    mNext.disabled = CURRENT_NEW_INDEX === -1 || CURRENT_NEW_INDEX >= NEW_IDS.length - 1;
+  }
+
+  function jumpToId(id){
+    const it = byId(id);
+    if (it){
+      const el = CARDS.find(c=>c.dataset.id===id);
+      if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+      openModal(it);
+    }
+  }
+
   backdrop.addEventListener('click', e=>{ if(e.target===backdrop) closeModal(); });
   mClose.addEventListener('click', closeModal);
+  mPrev.addEventListener('click', ()=>{
+    if (CURRENT_NEW_INDEX > 0) jumpToId(NEW_IDS[CURRENT_NEW_INDEX - 1]);
+  });
+  mNext.addEventListener('click', ()=>{
+    if (CURRENT_NEW_INDEX !== -1 && CURRENT_NEW_INDEX < NEW_IDS.length - 1)
+      jumpToId(NEW_IDS[CURRENT_NEW_INDEX + 1]);
+  });
+  window.addEventListener('keydown', (e)=>{
+    if (backdrop.style.display === 'flex'){
+      if (e.key === 'ArrowLeft') mPrev.click();
+      if (e.key === 'ArrowRight') mNext.click();
+      if (e.key === 'Escape') mClose.click();
+    }
+  });
 
   function apply(){
     const qs=(qEl.value||'').toLowerCase();
@@ -145,8 +204,6 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
       c.style.display=(mText&&mRo&&mCo&&mSt)?'flex':'none';
     }
   }
-
-  function byId(id){ return ITEMS.find(x=>x.id===id); }
 
   (async function init(){
     const snap = await getDocs(collection(db, 'coffees'));
@@ -190,9 +247,47 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
     qEl.addEventListener('input', apply); roEl.addEventListener('change', apply); coEl.addEventListener('change', apply); stEl.addEventListener('change', apply);
     apply();
 
-    // deep link
+    // deep link(s)
     const params = new URLSearchParams(location.search);
-    const id = params.get('id');
-    if(id){ const it = byId(id); if(it){ openModal(it); const el = CARDS.find(c=>c.dataset.id===id); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); } } }
+    const idsParam = params.get('ids');
+    const singleId = params.get('id');
+
+    NEW_IDS = idsParam ? idsParam.split(',').filter(Boolean) : [];
+    if (singleId && !NEW_IDS.includes(singleId)) {
+      NEW_IDS.unshift(singleId);
+    }
+
+    // Show banner if multiple IDs
+    if (NEW_IDS.length) {
+      const found = NEW_IDS.map(id => byId(id)).filter(Boolean);
+      if (found.length) {
+        newCount.textContent = (found.length === 1)
+          ? `1 new coffee`
+          : `${found.length} new coffees`;
+        newChips.innerHTML = '';
+        for (const it of found) {
+          const chip = document.createElement('button');
+          chip.className = 'chip';
+          chip.style.cursor = 'pointer';
+          chip.title = it.title;
+          chip.textContent = `${it.roaster} — ${it.title}`;
+          chip.addEventListener('click', ()=> jumpToId(it.id));
+          newChips.appendChild(chip);
+        }
+        newBanner.style.display = 'block';
+      }
+    }
+
+    // Open first id if present, else just single id
+    if (NEW_IDS.length) {
+      jumpToId(NEW_IDS[0]);
+    } else if (singleId) {
+      const it = byId(singleId);
+      if (it) {
+        openModal(it);
+        const el = CARDS.find(c=>c.dataset.id===singleId);
+        if (el) el.scrollIntoView({behavior:'smooth',block:'center'});
+      }
+    }
   })();
 </script>
