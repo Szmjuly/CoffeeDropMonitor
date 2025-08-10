@@ -18,15 +18,13 @@ input[type=search]::placeholder{color:#7d8493}
 .card:hover{transform:translateY(-2px);border-color:#2d3446}
 .row{display:flex;justify-content:space-between;gap:10px;align-items:center}
 .chip{background:var(--chip);border:1px solid var(--chipb);padding:2px 8px;border-radius:999px;font-size:12px;color:var(--muted)}
-.newchip{display:inline-flex;align-items:center;max-width:100%;height:30px;overflow:hidden}
 .ok{color:#9be8ae;border-color:#35543d;background:#112017}.no{color:#ffb3b3;border-color:#5a2f2f;background:#201113}
 a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
 .small{font-size:12px;color:var(--muted)}
-.modal-backdrop{position:fixed;inset:0;background:var(--overlay);display:none;align-items:center;justify-content:center;z-index:9999}
-.modal{width:min(640px,92vw);background:var(--panel);border:1px solid #2d3446;border-radius:18px;box-shadow:0 30px 60px rgba(0,0,0,.45);padding:16px 16px 12px}
-.modal h2{margin:2px 0 6px 0;font-size:18px}
+.modal-backdrop{position:fixed;inset:0;background:var(--overlay);display:none;align-items:center;justify-content:center;z-index:9999;overflow:hidden}
+.modal{width:min(640px,92vw);background:var(--panel);border:1px solid #2d3446;border-radius:18px;box-shadow:0 30px 60px rgba(0,0,0,.45);padding:16px 16px 12px;max-height:90vh;overflow:auto}
+.modal h2{margin:2px 0 6px 0;font-size:18px;word-break:break-word;overflow-wrap:anywhere}
 .modal .meta{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px 0}
-.modal #m_notes{max-height:200px;overflow-y:auto;margin:8px 0;padding:6px 0;line-height:1.5}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
 .modal .actions .btn{flex:1 1 auto}
 .btn{background:#141825;border:1px solid #2d3446;border-radius:12px;color:var(--fg);padding:10px 12px;cursor:pointer}
@@ -58,6 +56,21 @@ input[type=search], select, .btn{min-height:44px}
 
 /* New banner chips wrap on small widths */
 #newBanner .row{flex-wrap:wrap; gap:8px}
+
+/* New drops: uniform tiles with truncation */
+#newChips{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px}
+#newChips .chip{display:flex; align-items:center; width:100%; min-height:32px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; appearance:none; -webkit-appearance:none}
+@media (max-width:480px){ #newChips{grid-template-columns:1fr 1fr} }
+
+/* Card: prevent long roaster names from stretching height */
+.card .row .chip:first-child{flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.card .row .chip:last-child{flex:0 0 auto}
+.title-line{font-weight:600; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+
+/* Modal readability */
+.modal .chip{max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.modal .row{flex-wrap:wrap}
+#m_notes{font-size:14px; line-height:1.6; white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere}
 </style>
 
 <div class="wrap">
@@ -70,7 +83,7 @@ input[type=search], select, .btn{min-height:44px}
   <div id="newBanner" class="panel" style="display:none; margin-bottom:12px">
     <div class="row" style="align-items:center">
       <div><strong id="newCount">New drops</strong></div>
-      <div id="newChips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <div id="newChips"></div>
     </div>
   </div>
 
@@ -165,25 +178,33 @@ input[type=search], select, .btn{min-height:44px}
 
   function byId(id){ return ITEMS.find(x=>x.id===id); }
 
+  function setChip(el, text){
+    const t = (text||'').toString().trim();
+    if (t){ el.textContent = t; el.style.display = 'inline-flex'; }
+    else { el.textContent = ''; el.style.display = 'none'; }
+  }
+
   function openModal(item){
     if(!item) return;
     mTitle.textContent = item.title;
-    mRoaster.textContent = item.roaster;
-    mPrice.textContent = item.price || '';
-    mCountry.textContent = item.country || '';
-    mProcess.textContent = item.process || '';
-    mProfile.textContent = item.profile || '';
-    mNotes.textContent = item.notes || '';
+    setChip(mRoaster, item.roaster);
+    setChip(mPrice, item.price);
+    setChip(mCountry, item.country);
+    setChip(mProcess, item.process);
+    setChip(mProfile, item.profile);
+    if ((item.notes||'').trim()){ mNotes.textContent = item.notes; mNotes.style.display='block'; }
+    else { mNotes.textContent=''; mNotes.style.display='none'; }
     mFirst.textContent = item.first_seen || '';
     mLast.textContent = item.last_seen || '';
     mLink.href = item.url;
     backdrop.style.display='flex';
     modalEl.focus();
+    document.body.style.overflow='hidden';
     history.replaceState(null,'',`?id=${item.id}` + (NEW_IDS.length ? `&ids=${NEW_IDS.join(',')}` : ''));
     updatePrevNext(item.id);
   }
 
-  function closeModal(){ backdrop.style.display='none'; }
+  function closeModal(){ backdrop.style.display='none'; document.body.style.overflow=''; }
 
   function updatePrevNext(currentId){
     if (!NEW_IDS.length){
@@ -265,10 +286,14 @@ input[type=search], select, .btn{min-height:44px}
       a.dataset.stock   = it.in_stock? 'in':'out';
       a.innerHTML = `
         <div class='row'><div class='chip'>${esc(it.roaster||'')}</div><div class='chip ${it.in_stock?'ok':'no'}'>${it.in_stock?'In stock':'Sold out'}</div></div>
-        <div style='font-weight:600'>${esc(it.title||'')}</div>
+        <div class='title-line'>${esc(it.title||'')}</div>
         <div class='muted'>${esc(it.price||'')}</div>
         <div class='row small'><div>First: ${esc(it.first_seen||'')}</div><div>Last: ${esc(it.last_seen||'')}</div></div>
       `;
+      const roasterEl = a.querySelector('.row .chip');
+      if (roasterEl) roasterEl.title = (it.roaster||'');
+      const titleEl = a.querySelector('.title-line');
+      if (titleEl) titleEl.title = (it.title||'');
       a.addEventListener('click', (e)=>{ e.preventDefault(); openModal(it); });
       frag.appendChild(a);
       CARDS.push(a);
@@ -298,10 +323,10 @@ input[type=search], select, .btn{min-height:44px}
         newChips.innerHTML = '';
         for (const it of found) {
           const chip = document.createElement('button');
-          chip.className = 'chip newchip';
+          chip.className = 'chip';
           chip.style.cursor = 'pointer';
-          chip.title = `${it.roaster} — ${it.title}`;
-          chip.innerHTML = `<span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it.roaster)}</span> <span style="opacity:0.7;margin:0 2px">—</span> <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it.title)}</span>`;
+          chip.title = it.title;
+          chip.textContent = `${it.roaster} — ${it.title}`;
           chip.addEventListener('click', ()=> jumpToId(it.id));
           newChips.appendChild(chip);
         }
