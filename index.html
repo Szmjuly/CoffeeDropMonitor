@@ -18,6 +18,7 @@ input[type=search]::placeholder{color:#7d8493}
 .card:hover{transform:translateY(-2px);border-color:#2d3446}
 .row{display:flex;justify-content:space-between;gap:10px;align-items:center}
 .chip{background:var(--chip);border:1px solid var(--chipb);padding:2px 8px;border-radius:999px;font-size:12px;color:var(--muted)}
+.newchip{display:inline-flex;align-items:center;max-width:100%;height:30px;overflow:hidden}
 .ok{color:#9be8ae;border-color:#35543d;background:#112017}.no{color:#ffb3b3;border-color:#5a2f2f;background:#201113}
 a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
 .small{font-size:12px;color:var(--muted)}
@@ -25,6 +26,7 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
 .modal{width:min(640px,92vw);background:var(--panel);border:1px solid #2d3446;border-radius:18px;box-shadow:0 30px 60px rgba(0,0,0,.45);padding:16px 16px 12px}
 .modal h2{margin:2px 0 6px 0;font-size:18px}
 .modal .meta{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px 0}
+.modal #m_notes{max-height:200px;overflow-y:auto;margin:8px 0;padding:6px 0;line-height:1.5}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
 .modal .actions .btn{flex:1 1 auto}
 .btn{background:#141825;border:1px solid #2d3446;border-radius:12px;color:var(--fg);padding:10px 12px;cursor:pointer}
@@ -296,10 +298,10 @@ input[type=search], select, .btn{min-height:44px}
         newChips.innerHTML = '';
         for (const it of found) {
           const chip = document.createElement('button');
-          chip.className = 'chip';
+          chip.className = 'chip newchip';
           chip.style.cursor = 'pointer';
-          chip.title = it.title;
-          chip.textContent = `${it.roaster} — ${it.title}`;
+          chip.title = `${it.roaster} — ${it.title}`;
+          chip.innerHTML = `<span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it.roaster)}</span> <span style="opacity:0.7;margin:0 2px">—</span> <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it.title)}</span>`;
           chip.addEventListener('click', ()=> jumpToId(it.id));
           newChips.appendChild(chip);
         }
