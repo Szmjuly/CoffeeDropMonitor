@@ -4,7 +4,7 @@
 <title>Coffee Master List</title>
 <style>
 :root{--bg:#0b0c0e;--panel:#111318;--muted:#a0a6b3;--fg:#e7ebf3;--accent:#86e1a0;--chip:#1a1d25;--chipb:#262a35;--overlay:rgba(0,0,0,.55)}
-body{font-family:Inter,Segoe UI,system-ui,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg);margin:0;padding:24px}
+body{font-family:Inter,Segoe UI,system-ui,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg);margin:0;padding:24px;line-height:1.5}
 .wrap{max-width:1200px;margin:0 auto}
 .header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:16px}
 .title{font-weight:700;letter-spacing:.2px;margin:0;font-size:22px}
@@ -14,7 +14,7 @@ body{font-family:Inter,Segoe UI,system-ui,Roboto,Helvetica,Arial,sans-serif;back
 input[type=search],select{background:#0f1116;border:1px solid #2a2f3b;color:var(--fg);border-radius:12px;padding:10px 12px;outline:none}
 input[type=search]::placeholder{color:#7d8493}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-.card{background:var(--panel);border:1px solid #202534;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px;transition:transform .08s ease, border-color .2s ease}
+.card{background:var(--panel);border:1px solid #202534;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0;word-break:break-word;transition:transform .08s ease, border-color .2s ease}
 .card:hover{transform:translateY(-2px);border-color:#2d3446}
 .row{display:flex;justify-content:space-between;gap:10px;align-items:center}
 .chip{background:var(--chip);border:1px solid var(--chipb);padding:2px 8px;border-radius:999px;font-size:12px;color:var(--muted)}
@@ -25,10 +25,37 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
 .modal{width:min(640px,92vw);background:var(--panel);border:1px solid #2d3446;border-radius:18px;box-shadow:0 30px 60px rgba(0,0,0,.45);padding:16px 16px 12px}
 .modal h2{margin:2px 0 6px 0;font-size:18px}
 .modal .meta{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px 0}
-.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+.modal .actions .btn{flex:1 1 auto}
 .btn{background:#141825;border:1px solid #2d3446;border-radius:12px;color:var(--fg);padding:10px 12px;cursor:pointer}
 .btn.primary{background:#1e2a22;border-color:#3d6b4c}
 .btn:hover{filter:brightness(1.1)}
+.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+a.card:focus-visible, .card:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+/* Touch target sizes */
+input[type=search], select, .btn{min-height:44px}
+.controls input[type=search], .controls select{font-size:16px}
+
+/* Responsive layout */
+@media (max-width: 900px){
+  .controls{grid-template-columns: 1fr 1fr}
+}
+@media (max-width: 600px){
+  body{padding:12px}
+  .header{flex-direction:column; align-items:flex-start; gap:4px}
+  .controls{grid-template-columns: 1fr; gap:8px}
+  .title{font-size:20px}
+}
+@media (max-width: 400px){
+  .grid{grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))}
+}
+@media (max-width: 320px){
+  .grid{grid-template-columns: 1fr}
+}
+
+/* New banner chips wrap on small widths */
+#newBanner .row{flex-wrap:wrap; gap:8px}
 </style>
 
 <div class="wrap">
@@ -46,10 +73,10 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
   </div>
 
   <div class="panel controls">
-    <input id="q" type="search" placeholder="Search title / notes / price…" />
-    <select id="roaster"><option value="">All roasters</option></select>
-    <select id="country"><option value="">All countries</option></select>
-    <select id="stock"><option value="">Any status</option><option value="in">In stock</option><option value="out">Sold out</option></select>
+    <input id="q" type="search" placeholder="Search title / notes / price…" aria-label="Search coffees" />
+    <select id="roaster" aria-label="Filter by roaster"><option value="">All roasters</option></select>
+    <select id="country" aria-label="Filter by country"><option value="">All countries</option></select>
+    <select id="stock" aria-label="Filter by stock status"><option value="">Any status</option><option value="in">In stock</option><option value="out">Sold out</option></select>
   </div>
 
   <div id="grid" class="grid"></div>
@@ -57,7 +84,7 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
 
 <!-- Modal -->
 <div id="backdrop" class="modal-backdrop">
-  <div class="modal" role="dialog" aria-modal="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m_title" aria-describedby="m_notes" tabindex="-1">
     <div class="row">
       <h2 id="m_title"></h2>
       <span class="chip" id="m_roaster"></span>
@@ -112,7 +139,7 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
   const newBanner = document.getElementById('newBanner');
   const newCount  = document.getElementById('newCount');
   const newChips  = document.getElementById('newChips');
-
+  const PREFERS_REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const backdrop = document.getElementById('backdrop');
   const mTitle = document.getElementById('m_title');
   const mRoaster = document.getElementById('m_roaster');
@@ -128,6 +155,7 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
   const mPrev = document.getElementById('m_prev');
   const mNext = document.getElementById('m_next');
 
+  const modalEl = document.querySelector('#backdrop .modal');
   let ITEMS = [];
   let CARDS = [];
   let NEW_IDS = [];            // ids provided via ?ids=...
@@ -148,6 +176,7 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
     mLast.textContent = item.last_seen || '';
     mLink.href = item.url;
     backdrop.style.display='flex';
+    modalEl.focus();
     history.replaceState(null,'',`?id=${item.id}` + (NEW_IDS.length ? `&ids=${NEW_IDS.join(',')}` : ''));
     updatePrevNext(item.id);
   }
@@ -171,7 +200,7 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
     const it = byId(id);
     if (it){
       const el = CARDS.find(c=>c.dataset.id===id);
-      if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+      if (el) el.scrollIntoView({behavior: PREFERS_REDUCED_MOTION ? 'auto' : 'smooth', block:'center'});
       openModal(it);
     }
   }
@@ -286,7 +315,7 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
       if (it) {
         openModal(it);
         const el = CARDS.find(c=>c.dataset.id===singleId);
-        if (el) el.scrollIntoView({behavior:'smooth',block:'center'});
+        if (el) el.scrollIntoView({behavior: PREFERS_REDUCED_MOTION ? 'auto' : 'smooth', block:'center'});
       }
     }
   })();
