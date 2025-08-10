@@ -13,7 +13,7 @@ body{font-family:Inter,Segoe UI,system-ui,Roboto,Helvetica,Arial,sans-serif;back
 .controls{display:grid;grid-template-columns:1fr 200px 160px 160px;gap:10px;align-items:center;margin-bottom:16px}
 input[type=search],select{background:#0f1116;border:1px solid #2a2f3b;color:var(--fg);border-radius:12px;padding:10px 12px;outline:none}
 input[type=search]::placeholder{color:#7d8493}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
 .card{background:var(--panel);border:1px solid #202534;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0;word-break:break-word;transition:transform .08s ease, border-color .2s ease}
 .card:hover{transform:translateY(-2px);border-color:#2d3446}
 .row{display:flex;justify-content:space-between;gap:10px;align-items:center}
@@ -23,8 +23,8 @@ a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
 .small{font-size:12px;color:var(--muted)}
 .modal-backdrop{position:fixed;inset:0;background:var(--overlay);display:none;align-items:center;justify-content:center;z-index:9999;overflow:hidden}
 .modal{width:min(640px,92vw);background:var(--panel);border:1px solid #2d3446;border-radius:18px;box-shadow:0 30px 60px rgba(0,0,0,.45);padding:16px 16px 12px;max-height:90vh;overflow:auto}
-.modal h2{margin:2px 0 6px 0;font-size:18px;word-break:break-word;overflow-wrap:anywhere}
-.modal .meta{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px 0}
+.modal h2{margin:2px 0 6px 0;font-size:18px;word-break:break-word;overflow-wrap:anywhere;text-align:center}
+.modal .meta{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px 0;justify-content:center}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
 .modal .actions .btn{flex:1 1 auto}
 .btn{background:#141825;border:1px solid #2d3446;border-radius:12px;color:var(--fg);padding:10px 12px;cursor:pointer}
@@ -47,10 +47,7 @@ input[type=search], select, .btn{min-height:44px}
   .controls{grid-template-columns: 1fr; gap:8px}
   .title{font-size:20px}
 }
-@media (max-width: 400px){
-  .grid{grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))}
-}
-@media (max-width: 320px){
+@media (max-width: 480px){
   .grid{grid-template-columns: 1fr}
 }
 
@@ -60,7 +57,7 @@ input[type=search], select, .btn{min-height:44px}
 /* New drops: uniform tiles with truncation */
 #newChips{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px}
 #newChips .chip{display:flex; align-items:center; width:100%; min-height:32px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; appearance:none; -webkit-appearance:none}
-@media (max-width:480px){ #newChips{grid-template-columns:1fr 1fr} }
+@media (max-width:480px){ #newChips{grid-template-columns:1fr} }
 
 /* Card: prevent long roaster names from stretching height */
 .card .row .chip:first-child{flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
@@ -142,7 +139,7 @@ input[type=search], select, .btn{min-height:44px}
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
 
-  const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
   const qEl = document.getElementById('q');
   const roEl = document.getElementById('roaster');
@@ -279,10 +276,10 @@ input[type=search], select, .btn{min-height:44px}
       a.href = it.url; a.target='_blank'; a.rel='noopener';
       a.dataset.id = it.id;
       a.dataset.roaster = it.roaster || '';
-      a.dataset.title   = (it.title||'').toLowerCase();
-      a.dataset.price   = (it.price||'').toLowerCase();
-      a.dataset.notes   = (it.notes||'').toLowerCase();
-      a.dataset.country = (it.country||'').toLowerCase();
+      a.dataset.title   = String(it.title ?? '').toLowerCase();
+      a.dataset.price   = String(it.price ?? '').toLowerCase();
+      a.dataset.notes   = String(it.notes ?? '').toLowerCase();
+      a.dataset.country = String(it.country ?? '').toLowerCase();
       a.dataset.stock   = it.in_stock? 'in':'out';
       a.innerHTML = `
         <div class='row'><div class='chip'>${esc(it.roaster||'')}</div><div class='chip ${it.in_stock?'ok':'no'}'>${it.in_stock?'In stock':'Sold out'}</div></div>
