@@ -2,78 +2,16 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Coffee Master List</title>
-<style>
-:root{--bg:#0b0c0e;--panel:#111318;--muted:#a0a6b3;--fg:#e7ebf3;--accent:#86e1a0;--chip:#1a1d25;--chipb:#262a35;--overlay:rgba(0,0,0,.55)}
-body{font-family:Inter,Segoe UI,system-ui,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg);margin:0;padding:24px;line-height:1.5}
-.wrap{max-width:1200px;margin:0 auto}
-.header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:16px}
-.title{font-weight:700;letter-spacing:.2px;margin:0;font-size:22px}
-.muted{color:var(--muted)}
-.panel{background:var(--panel);border:1px solid #222532;border-radius:16px;padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
-.controls{display:grid;grid-template-columns:1fr 200px 160px 160px;gap:10px;align-items:center;margin-bottom:16px}
-input[type=search],select{background:#0f1116;border:1px solid #2a2f3b;color:var(--fg);border-radius:12px;padding:10px 12px;outline:none}
-input[type=search]::placeholder{color:#7d8493}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
-.card{background:var(--panel);border:1px solid #202534;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0;word-break:break-word;transition:transform .08s ease, border-color .2s ease}
-.card:hover{transform:translateY(-2px);border-color:#2d3446}
-.row{display:flex;justify-content:space-between;gap:10px;align-items:center}
-.chip{background:var(--chip);border:1px solid var(--chipb);padding:2px 8px;border-radius:999px;font-size:12px;color:var(--muted)}
-.ok{color:#9be8ae;border-color:#35543d;background:#112017}.no{color:#ffb3b3;border-color:#5a2f2f;background:#201113}
-a{color:var(--fg);text-decoration:none}a:hover{color:var(--accent)}
-.small{font-size:12px;color:var(--muted)}
-.modal-backdrop{position:fixed;inset:0;background:var(--overlay);display:none;align-items:center;justify-content:center;z-index:9999;overflow:hidden}
-.modal{width:min(640px,92vw);background:var(--panel);border:1px solid #2d3446;border-radius:18px;box-shadow:0 30px 60px rgba(0,0,0,.45);padding:16px 16px 12px;max-height:90vh;overflow:auto}
-.modal h2{margin:2px 0 6px 0;font-size:18px;word-break:break-word;overflow-wrap:anywhere;text-align:center}
-.modal .meta{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px 0;justify-content:center}
-.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
-.modal .actions .btn{flex:1 1 auto}
-.btn{background:#141825;border:1px solid #2d3446;border-radius:12px;color:var(--fg);padding:10px 12px;cursor:pointer}
-.btn.primary{background:#1e2a22;border-color:#3d6b4c}
-.btn:hover{filter:brightness(1.1)}
-.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-a.card:focus-visible, .card:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-
-/* Touch target sizes */
-input[type=search], select, .btn{min-height:44px}
-.controls input[type=search], .controls select{font-size:16px}
-
-/* Responsive layout */
-@media (max-width: 900px){
-  .controls{grid-template-columns: 1fr 1fr}
-}
-@media (max-width: 600px){
-  body{padding:12px}
-  .header{flex-direction:column; align-items:flex-start; gap:4px}
-  .controls{grid-template-columns: 1fr; gap:8px}
-  .title{font-size:20px}
-}
-@media (max-width: 480px){
-  .grid{grid-template-columns: 1fr}
-}
-
-/* New banner chips wrap on small widths */
-#newBanner .row{flex-wrap:wrap; gap:8px}
-
-/* New drops: uniform tiles with truncation */
-#newChips{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px}
-#newChips .chip{display:flex; align-items:center; width:100%; min-height:32px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; appearance:none; -webkit-appearance:none}
-@media (max-width:480px){ #newChips{grid-template-columns:1fr} }
-
-/* Card: prevent long roaster names from stretching height */
-.card .row .chip:first-child{flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.card .row .chip:last-child{flex:0 0 auto}
-.title-line{font-weight:600; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
-
-/* Modal readability */
-.modal .chip{max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.modal .row{flex-wrap:wrap}
-#m_notes{font-size:14px; line-height:1.6; white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere}
-</style>
+<link rel="stylesheet" href="style.css">
 
 <div class="wrap">
   <div class="header">
     <h1 class="title">Coffee Master List</h1>
     <div class="muted small" id="stamp">Loading…</div>
+    <div class="row" style="gap:8px; align-items:center">
+      <span id="userInfo" class="small muted" aria-live="polite" style="display:none"></span>
+      <button id="avatarBtn" class="avatar" aria-haspopup="menu" aria-expanded="false" aria-controls="authMenu" title="Account"></button>
+    </div>
   </div>
 
   <!-- New drops banner (shown only if ?ids=... or multiple ids present) -->
@@ -85,14 +23,78 @@ input[type=search], select, .btn{min-height:44px}
   </div>
 
   <div class="panel controls">
+    <button id="menuToggle" class="btn icon hamburger" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">☰</button>
     <input id="q" type="search" placeholder="Search title / notes / price…" aria-label="Search coffees" />
     <select id="roaster" aria-label="Filter by roaster"><option value="">All roasters</option></select>
     <select id="country" aria-label="Filter by country"><option value="">All countries</option></select>
     <select id="stock" aria-label="Filter by stock status"><option value="">Any status</option><option value="in">In stock</option><option value="out">Sold out</option></select>
+    <select id="sort" aria-label="Sort coffees">
+      <option value="stock">In-stock first</option>
+      <option value="last">Newest (Last seen)</option>
+      <option value="roaster">Roaster A–Z</option>
+      <option value="country">Country A–Z</option>
+      <option value="title">Title A–Z</option>
+    </select>
+    <select id="groupBy" aria-label="Group by">
+      <option value="none">No grouping</option>
+      <option value="roaster">Group by roaster</option>
+      <option value="country">Group by country</option>
+    </select>
   </div>
 
-  <div id="grid" class="grid"></div>
+  <div id="sections">
+    <div class="section" id="sec-in">
+      <div class="section-header" id="header-in" role="button" tabindex="0" aria-controls="grid-in" aria-expanded="true">
+        <h3 class="section-title">In stock</h3>
+        <div class="carousel-controls" aria-label="In-stock carousel controls">
+          <button id="prev-in" class="btn icon carousel-btn" aria-label="Scroll left" aria-controls="grid-in">◀</button>
+          <button id="next-in" class="btn icon carousel-btn" aria-label="Scroll right" aria-controls="grid-in">▶</button>
+        </div>
+      </div>
+      <div class="grid carousel" id="grid-in"></div>
+    </div>
+    <div class="section" id="sec-out">
+      <div class="section-header" id="header-out" role="button" tabindex="0" aria-controls="grid-out" aria-expanded="true">
+        <h3 class="section-title">Sold out</h3>
+        <div class="carousel-controls" aria-label="Sold-out carousel controls">
+          <button id="prev-out" class="btn icon carousel-btn" aria-label="Scroll left" aria-controls="grid-out">◀</button>
+          <button id="next-out" class="btn icon carousel-btn" aria-label="Scroll right" aria-controls="grid-out">▶</button>
+        </div>
+      </div>
+      <div class="grid carousel" id="grid-out"></div>
+    </div>
+  </div>
+  <div style="display:flex; justify-content:center; margin:14px 0">
+    <button id="loadMore" class="btn" style="display:none">Load more</button>
+  </div>
 </div>
+
+<!-- Floating auth menu -->
+<div id="authMenu" class="menu" role="menu" aria-hidden="true">
+  <div class="menu-header">
+    <div id="avatarLarge" class="avatar large" aria-hidden="true"></div>
+    <div class="menu-user">
+      <div id="menuUserName" class="menu-name"></div>
+      <div id="menuUserEmail" class="menu-email"></div>
+    </div>
+  </div>
+  <div class="menu-body">
+    <button id="menuGoogle" class="menu-item" role="menuitem">Sign in with Google</button>
+    <div class="menu-sep"></div>
+    <div class="menu-inline">
+      <input id="authEmail" type="email" placeholder="Email" aria-label="Email">
+      <input id="authPass" type="password" placeholder="Password" aria-label="Password">
+      <div class="menu-inline-buttons">
+        <button id="emailSignIn" class="menu-item" role="menuitem">Email sign in</button>
+        <button id="emailRegister" class="menu-item" role="menuitem">Register</button>
+      </div>
+    </div>
+    <div class="menu-sep"></div>
+    <button id="menuSignOut" class="menu-item" role="menuitem" style="display:none">Sign out</button>
+  </div>
+  <div class="menu-arrow" aria-hidden="true"></div>
+ </div>
+<div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
 
 <!-- Modal -->
 <div id="backdrop" class="modal-backdrop">
@@ -106,241 +108,52 @@ input[type=search], select, .btn{min-height:44px}
       <span class="chip" id="m_country"></span>
       <span class="chip" id="m_process"></span>
       <span class="chip" id="m_profile"></span>
+      <span class="chip" id="m_tried" title="You have tried this" style="display:none"></span>
+      <span class="chip" id="m_purchased" title="You purchased this" style="display:none"></span>
     </div>
     <div class="small muted" id="m_notes"></div>
     <div class="row small" style="margin-top:10px">
       <div>First: <span id="m_first"></span></div>
       <div>Last: <span id="m_last"></span></div>
     </div>
+    <!-- Tried controls (per-user) -->
+    <div class="panel" id="tryControls" style="display:none; margin-top:10px">
+      <div class="row" style="gap:8px; align-items:center; flex-wrap:wrap">
+        <label for="m_try_rating" class="small muted">Rating</label>
+        <select id="m_try_rating" aria-label="Tried rating">
+          <option value="">(none)</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+        <input id="m_try_notes" type="text" placeholder="Notes (optional)" aria-label="Tried notes" style="flex:1 1 260px" />
+      </div>
+    </div>
     <div class="actions">
       <button id="m_prev" class="btn">◀ Prev</button>
       <a id="m_link" class="btn primary" target="_blank" rel="noopener">Visit product</a>
       <button id="m_next" class="btn">Next ▶</button>
+      <button id="m_try" class="btn" style="display:none" aria-pressed="false">Mark tried</button>
+      <button id="m_purchase" class="btn" style="display:none" aria-pressed="false">Mark purchased</button>
       <button id="m_close" class="btn">Close</button>
     </div>
   </div>
 </div>
 
-<script type="module">
-  // ---- FIREBASE_CONFIG: paste your real config here ----
-  const firebaseConfig = {
-    apiKey: "AIzaSyB7ovDN0lvwYZ872cFCxF_yI8BAFbm6xpw",
-    authDomain: "coffee-drop-monitor.firebaseapp.com",
-    projectId: "coffee-drop-monitor",
-    storageBucket: "coffee-drop-monitor.firebasestorage.app",
-    messagingSenderId: "578440481584",
-    appId: "1:578440481584:web:97463ed94ebc3f976696f5",
-    measurementId: "G-76KG6PQLNF"
-  };
+<!-- Sidebar -->
+<div id="sidebarBackdrop" class="sidebar-backdrop" hidden></div>
+<aside id="sidebar" class="sidebar" aria-hidden="true">
+  <div class="sidebar-header">
+    <h3 class="sidebar-title">Filters</h3>
+    <button id="sidebarClose" class="btn icon" aria-label="Close menu">✕</button>
+  </div>
+  <div class="sidebar-body">
+    <button id="sb_hideSoldOut" class="btn toggle" aria-pressed="false">Hide sold out</button>
+    <button id="sb_onlyTried" class="btn toggle" aria-pressed="false">Show only tried</button>
+  </div>
+  
+</aside>
 
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
-
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-
-  const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-  const qEl = document.getElementById('q');
-  const roEl = document.getElementById('roaster');
-  const coEl = document.getElementById('country');
-  const stEl = document.getElementById('stock');
-  const grid = document.getElementById('grid');
-  const stamp = document.getElementById('stamp');
-
-  const newBanner = document.getElementById('newBanner');
-  const newCount  = document.getElementById('newCount');
-  const newChips  = document.getElementById('newChips');
-  const PREFERS_REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const backdrop = document.getElementById('backdrop');
-  const mTitle = document.getElementById('m_title');
-  const mRoaster = document.getElementById('m_roaster');
-  const mPrice = document.getElementById('m_price');
-  const mCountry = document.getElementById('m_country');
-  const mProcess = document.getElementById('m_process');
-  const mProfile = document.getElementById('m_profile');
-  const mNotes = document.getElementById('m_notes');
-  const mFirst = document.getElementById('m_first');
-  const mLast = document.getElementById('m_last');
-  const mLink = document.getElementById('m_link');
-  const mClose = document.getElementById('m_close');
-  const mPrev = document.getElementById('m_prev');
-  const mNext = document.getElementById('m_next');
-
-  const modalEl = document.querySelector('#backdrop .modal');
-  let ITEMS = [];
-  let CARDS = [];
-  let NEW_IDS = [];            // ids provided via ?ids=...
-  let CURRENT_NEW_INDEX = -1;  // pointer within NEW_IDS
-
-  function byId(id){ return ITEMS.find(x=>x.id===id); }
-
-  function setChip(el, text){
-    const t = (text||'').toString().trim();
-    if (t){ el.textContent = t; el.style.display = 'inline-flex'; }
-    else { el.textContent = ''; el.style.display = 'none'; }
-  }
-
-  function openModal(item){
-    if(!item) return;
-    mTitle.textContent = item.title;
-    setChip(mRoaster, item.roaster);
-    setChip(mPrice, item.price);
-    setChip(mCountry, item.country);
-    setChip(mProcess, item.process);
-    setChip(mProfile, item.profile);
-    if ((item.notes||'').trim()){ mNotes.textContent = item.notes; mNotes.style.display='block'; }
-    else { mNotes.textContent=''; mNotes.style.display='none'; }
-    mFirst.textContent = item.first_seen || '';
-    mLast.textContent = item.last_seen || '';
-    mLink.href = item.url;
-    backdrop.style.display='flex';
-    modalEl.focus();
-    document.body.style.overflow='hidden';
-    history.replaceState(null,'',`?id=${item.id}` + (NEW_IDS.length ? `&ids=${NEW_IDS.join(',')}` : ''));
-    updatePrevNext(item.id);
-  }
-
-  function closeModal(){ backdrop.style.display='none'; document.body.style.overflow=''; }
-
-  function updatePrevNext(currentId){
-    if (!NEW_IDS.length){
-      mPrev.style.display = 'none';
-      mNext.style.display = 'none';
-      return;
-    }
-    mPrev.style.display = '';
-    mNext.style.display = '';
-    CURRENT_NEW_INDEX = NEW_IDS.indexOf(currentId);
-    mPrev.disabled = CURRENT_NEW_INDEX <= 0;
-    mNext.disabled = CURRENT_NEW_INDEX === -1 || CURRENT_NEW_INDEX >= NEW_IDS.length - 1;
-  }
-
-  function jumpToId(id){
-    const it = byId(id);
-    if (it){
-      const el = CARDS.find(c=>c.dataset.id===id);
-      if (el) el.scrollIntoView({behavior: PREFERS_REDUCED_MOTION ? 'auto' : 'smooth', block:'center'});
-      openModal(it);
-    }
-  }
-
-  backdrop.addEventListener('click', e=>{ if(e.target===backdrop) closeModal(); });
-  mClose.addEventListener('click', closeModal);
-  mPrev.addEventListener('click', ()=>{
-    if (CURRENT_NEW_INDEX > 0) jumpToId(NEW_IDS[CURRENT_NEW_INDEX - 1]);
-  });
-  mNext.addEventListener('click', ()=>{
-    if (CURRENT_NEW_INDEX !== -1 && CURRENT_NEW_INDEX < NEW_IDS.length - 1)
-      jumpToId(NEW_IDS[CURRENT_NEW_INDEX + 1]);
-  });
-  window.addEventListener('keydown', (e)=>{
-    if (backdrop.style.display === 'flex'){
-      if (e.key === 'ArrowLeft') mPrev.click();
-      if (e.key === 'ArrowRight') mNext.click();
-      if (e.key === 'Escape') mClose.click();
-    }
-  });
-
-  function apply(){
-    const qs=(qEl.value||'').toLowerCase();
-    const rr=roEl.value; const cc=(coEl.value||'').toLowerCase(); const ss=stEl.value;
-    for(const c of CARDS){
-      const mText = c.dataset.title.includes(qs) || c.dataset.price.includes(qs) || c.dataset.notes.includes(qs);
-      const mRo = !rr || c.dataset.roaster===rr;
-      const mCo = !cc || c.dataset.country===cc;
-      const mSt = !ss || c.dataset.stock===ss;
-      c.style.display=(mText&&mRo&&mCo&&mSt)?'flex':'none';
-    }
-  }
-
-  (async function init(){
-    const snap = await getDocs(collection(db, 'coffees'));
-    const items = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-    ITEMS = items;
-
-    const gen = new Date().toISOString().slice(0,16).replace('T',' ');
-    stamp.textContent = `Loaded ${gen} • ${items.length} items`;
-
-    // filters
-    const roasters = [...new Set(items.map(x=>x.roaster))].sort();
-    for(const r of roasters){ const o=document.createElement('option'); o.textContent=r; roEl.appendChild(o); }
-    const countries = [...new Set(items.map(x=>x.country).filter(Boolean))].sort();
-    for(const c of countries){ const o=document.createElement('option'); o.textContent=c; coEl.appendChild(o); }
-
-    // cards
-    const frag = document.createDocumentFragment();
-    for(const it of items){
-      const a = document.createElement('a');
-      a.className='card';
-      a.href = it.url; a.target='_blank'; a.rel='noopener';
-      a.dataset.id = it.id;
-      a.dataset.roaster = it.roaster || '';
-      a.dataset.title   = String(it.title ?? '').toLowerCase();
-      a.dataset.price   = String(it.price ?? '').toLowerCase();
-      a.dataset.notes   = String(it.notes ?? '').toLowerCase();
-      a.dataset.country = String(it.country ?? '').toLowerCase();
-      a.dataset.stock   = it.in_stock? 'in':'out';
-      a.innerHTML = `
-        <div class='row'><div class='chip'>${esc(it.roaster||'')}</div><div class='chip ${it.in_stock?'ok':'no'}'>${it.in_stock?'In stock':'Sold out'}</div></div>
-        <div class='title-line'>${esc(it.title||'')}</div>
-        <div class='muted'>${esc(it.price||'')}</div>
-        <div class='row small'><div>First: ${esc(it.first_seen||'')}</div><div>Last: ${esc(it.last_seen||'')}</div></div>
-      `;
-      const roasterEl = a.querySelector('.row .chip');
-      if (roasterEl) roasterEl.title = (it.roaster||'');
-      const titleEl = a.querySelector('.title-line');
-      if (titleEl) titleEl.title = (it.title||'');
-      a.addEventListener('click', (e)=>{ e.preventDefault(); openModal(it); });
-      frag.appendChild(a);
-      CARDS.push(a);
-    }
-    grid.appendChild(frag);
-
-    qEl.addEventListener('input', apply); roEl.addEventListener('change', apply); coEl.addEventListener('change', apply); stEl.addEventListener('change', apply);
-    apply();
-
-    // deep link(s)
-    const params = new URLSearchParams(location.search);
-    const idsParam = params.get('ids');
-    const singleId = params.get('id');
-
-    NEW_IDS = idsParam ? idsParam.split(',').filter(Boolean) : [];
-    if (singleId && !NEW_IDS.includes(singleId)) {
-      NEW_IDS.unshift(singleId);
-    }
-
-    // Show banner if multiple IDs
-    if (NEW_IDS.length) {
-      const found = NEW_IDS.map(id => byId(id)).filter(Boolean);
-      if (found.length) {
-        newCount.textContent = (found.length === 1)
-          ? `1 new coffee`
-          : `${found.length} new coffees`;
-        newChips.innerHTML = '';
-        for (const it of found) {
-          const chip = document.createElement('button');
-          chip.className = 'chip';
-          chip.style.cursor = 'pointer';
-          chip.title = it.title;
-          chip.textContent = `${it.roaster} — ${it.title}`;
-          chip.addEventListener('click', ()=> jumpToId(it.id));
-          newChips.appendChild(chip);
-        }
-        newBanner.style.display = 'block';
-      }
-    }
-
-    // Open first id if present, else just single id
-    if (NEW_IDS.length) {
-      jumpToId(NEW_IDS[0]);
-    } else if (singleId) {
-      const it = byId(singleId);
-      if (it) {
-        openModal(it);
-        const el = CARDS.find(c=>c.dataset.id===singleId);
-        if (el) el.scrollIntoView({behavior: PREFERS_REDUCED_MOTION ? 'auto' : 'smooth', block:'center'});
-      }
-    }
-  })();
-</script>
+<script src="main.js" type="module"></script>

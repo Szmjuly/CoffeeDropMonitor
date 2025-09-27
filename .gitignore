@@ -1,0 +1,15 @@
+.venv/
+.env
+
+# Local credentials
+firebase.json
+firebase-secret.txt
+
+# SQLite DB files
+coffee_firestore.db
+coffee_firestore.db-shm
+coffee_firestore.db-wal
+
+# OS cruft
+.DS_Store
+Thumbs.db
